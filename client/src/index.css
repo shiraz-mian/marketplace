@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --color-canvas: #f5f5ee;
+  --color-ink: #243a30;
+  --color-muted: #667168;
+  --color-brand: #234e3e;
+  --color-brand-hover: #163d2e;
+  --color-accent: #9b573d;
+  --color-line: #dce1d9;
+  --color-input-border: #cbd3c8;
+  --color-danger: #a52d27;
+}
+
+@layer base {
+  body {
+    @apply min-w-80 bg-canvas font-sans leading-[normal] text-ink scheme-light antialiased;
+  }
+
+  button {
+    @apply enabled:cursor-pointer focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#567b62];
+  }
+}

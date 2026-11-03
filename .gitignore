@@ -1,0 +1,12 @@
+node_modules/
+dist/
+dist-ssr/
+coverage/
+.vitest/
+.vscode/
+
+.env
+.env.*
+!.env.example
+
+*.log
