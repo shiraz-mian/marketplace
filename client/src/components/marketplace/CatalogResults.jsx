@@ -1,4 +1,4 @@
-import { Button, EmptyState, Feedback, Loading, Pagination } from "./ui.jsx";
+import { Button, EmptyState, Feedback, Pagination } from "./ui.jsx";
 import { CatalogProductCard } from "./CatalogProductCard.jsx";
 import { MAX_SEARCH_PAGE } from "../../utils/catalogSearch.js";
 
@@ -35,7 +35,9 @@ const CatalogResults = ({
         </Button>
       )}
       {loading ? (
-        <Loading />
+        <p role="status" className="py-10 text-sm text-muted">
+          Loading products. This may take a moment.
+        </p>
       ) : (
         data && (
           <>

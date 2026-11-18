@@ -72,6 +72,8 @@ const getMarketplaceError = (error) => {
     return "We couldn't reach the server. Check your connection and try again.";
   const code = error.response.data?.error?.code;
   if (Object.hasOwn(MESSAGES, code)) return MESSAGES[code];
+  if ([502, 503, 504].includes(error.response.status))
+    return "The service is temporarily unavailable. Please try again shortly.";
   if (error.response.status === 403)
     return "Your account does not have permission to do this.";
   if (error.response.status === 422)

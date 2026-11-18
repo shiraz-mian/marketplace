@@ -1,4 +1,5 @@
 import { apiClient, protectedApiClient } from "../api/apiClient.js";
+import { getCatalogSearch } from "./catalogRequest.js";
 
 const readData = ({ data, status }) => {
   if (![200, 201].includes(status) || data?.success !== true || !data.data)
@@ -47,10 +48,7 @@ const reviewVendorApplication = async (id, status) =>
 const listCatalog = async (params, { signal } = {}) =>
   readList(await apiClient.get("/products", { params, signal }), "products");
 const searchCatalog = async (params, { signal } = {}) =>
-  readList(
-    await apiClient.get("/products/search", { params, signal }),
-    "products",
-  );
+  readList(await getCatalogSearch(params, { signal }), "products");
 const getCatalogProduct = async (id, { signal } = {}) =>
   readData(await apiClient.get(`/products/${id}`, { signal })).product;
 const listMyProducts = async (params, { signal } = {}) =>
