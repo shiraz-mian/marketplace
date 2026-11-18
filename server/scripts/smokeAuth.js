@@ -10,7 +10,9 @@ import { initializeAuth } from "../src/services/authService.js";
 // authentication records are created, changed or deleted by this script.
 const run = async () => {
   if (!process.env.SMOKE_EMAIL || !process.env.SMOKE_PASSWORD) {
-    throw new Error("Set SMOKE_EMAIL and SMOKE_PASSWORD for an existing development account.");
+    throw new Error(
+      "Set SMOKE_EMAIL and SMOKE_PASSWORD for an existing development account.",
+    );
   }
 
   let server;
@@ -23,16 +25,25 @@ const run = async () => {
     const baseUrl = `http://127.0.0.1:${server.address().port}`;
 
     const loginResponse = await fetch(`${baseUrl}/api/auth/login`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: process.env.SMOKE_EMAIL, password: process.env.SMOKE_PASSWORD }),
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: process.env.SMOKE_EMAIL,
+        password: process.env.SMOKE_PASSWORD,
+      }),
     });
-    assert.equal(loginResponse.status, 200, "Development account login must succeed.");
+    assert.equal(
+      loginResponse.status,
+      200,
+      "Development account login must succeed.",
+    );
     const login = await loginResponse.json();
     const cookie = loginResponse.headers.get("set-cookie").split(";")[0];
 
     const post = async (path, refreshCookie) => {
       const response = await fetch(`${baseUrl}/api/auth/${path}`, {
-        method: "POST", headers: {
+        method: "POST",
+        headers: {
           "X-Requested-With": "XMLHttpRequest",
           ...(refreshCookie ? { Cookie: refreshCookie } : {}),
         },
@@ -55,15 +66,25 @@ const run = async () => {
     assert.equal(await profileStatus(refreshed.payload.data.accessToken), 200);
     const logout = await post("logout", cookie);
     assert.equal(logout.response.status, 200);
-    assert.match(logout.response.headers.get("set-cookie"), /marketplace_refresh=;/);
+    assert.match(
+      logout.response.headers.get("set-cookie"),
+      /marketplace_refresh=;/,
+    );
     assert.equal((await post("refresh")).response.status, 401);
     // Stateless logout cannot revoke a previously copied JWT.
     assert.equal(await profileStatus(refreshed.payload.data.accessToken), 200);
     assert.equal((await post("refresh", cookie)).response.status, 200);
-    console.log(JSON.stringify({
-      login: 200, profile: 200, refresh: 200, logout: 200,
-      refreshWithoutCookie: 401, savedAccessAfterLogout: 200, savedRefreshAfterLogout: 200,
-    }));
+    console.log(
+      JSON.stringify({
+        login: 200,
+        profile: 200,
+        refresh: 200,
+        logout: 200,
+        refreshWithoutCookie: 401,
+        savedAccessAfterLogout: 200,
+        savedRefreshAfterLogout: 200,
+      }),
+    );
   } finally {
     if (server) await new Promise((resolve) => server.close(resolve));
     await mongoose.disconnect();
@@ -71,6 +92,10 @@ const run = async () => {
 };
 
 run().catch((error) => {
-  console.error("Auth smoke check failed:", error.name, error.code || "CHECK_FAILED");
+  console.error(
+    "Auth smoke check failed:",
+    error.name,
+    error.code || "CHECK_FAILED",
+  );
   process.exitCode = 1;
 });

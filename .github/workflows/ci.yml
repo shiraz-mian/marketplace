@@ -1,0 +1,39 @@
+name: Marketplace checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      redis:
+        image: redis:8.10.3-alpine
+        ports: ["6379:6379"]
+        options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 10
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:9.5.6
+        ports: ["9200:9200"]
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: "false"
+          ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+        options: --memory=1g --health-cmd "curl -fs http://localhost:9200/_cluster/health" --health-interval 10s --health-timeout 5s --health-retries 20 --health-start-period 30s
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            client/package-lock.json
+            server/package-lock.json
+      - run: npm ci
+      - run: npm ci --prefix client
+      - run: npm ci --prefix server
+      - run: npm run verify:services

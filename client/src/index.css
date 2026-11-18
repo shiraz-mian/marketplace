@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans:
+    "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --color-canvas: #f5f5ee;
   --color-ink: #243a30;
   --color-muted: #667168;

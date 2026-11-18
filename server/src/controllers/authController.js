@@ -1,7 +1,15 @@
 import { registerSchema, loginSchema } from "../validators/authValidator.js";
-import { registerUser, loginUser, refreshAccessToken } from "../services/authService.js";
+import {
+  registerUser,
+  loginUser,
+  refreshAccessToken,
+} from "../services/authService.js";
 import { apiResponse } from "../utils/apiResponse.js";
-import { readRefreshCookie, setRefreshCookie, clearRefreshCookie } from "../utils/refreshCookie.js";
+import {
+  readRefreshCookie,
+  setRefreshCookie,
+  clearRefreshCookie,
+} from "../utils/refreshCookie.js";
 
 const sendAuthResponse = (res, result, message) => {
   const { refreshToken, refreshExpiresAt, ...data } = result;
@@ -14,9 +22,9 @@ const register = async (req, res) => {
   const input = registerSchema.parse(req.body);
   const user = await registerUser(input);
 
-  return res.status(201).json(
-    apiResponse({ user }, "Account created successfully."),
-  );
+  return res
+    .status(201)
+    .json(apiResponse({ user }, "Account created successfully."));
 };
 
 const login = async (req, res) => {
@@ -39,7 +47,9 @@ const logout = (req, res) => {
 
 const getMe = (req, res) => {
   res.set("Cache-Control", "no-store");
-  return res.status(200).json(apiResponse({ user: req.user }, "Current user loaded."));
+  return res
+    .status(200)
+    .json(apiResponse({ user: req.user }, "Current user loaded."));
 };
 
 export { register, login, refresh, logout, getMe };

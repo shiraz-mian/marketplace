@@ -1,7 +1,15 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router";
 import { AuthLayout } from "../components/auth/AuthLayout.jsx";
-import { INPUT_CLASSES, LABEL_CLASSES, FIELD_ERROR_CLASSES, SUBMIT_CLASSES, PASSWORD_TOGGLE_CLASSES, LINK_CLASSES, SPINNER_CLASSES } from "../components/auth/authStyles.js";
+import {
+  INPUT_CLASSES,
+  LABEL_CLASSES,
+  FIELD_ERROR_CLASSES,
+  SUBMIT_CLASSES,
+  PASSWORD_TOGGLE_CLASSES,
+  LINK_CLASSES,
+  SPINNER_CLASSES,
+} from "../components/auth/authStyles.js";
 import { registerCustomer } from "../services/authService.js";
 import { getRegistrationError } from "../utils/getRegistrationError.js";
 
@@ -54,7 +62,11 @@ const RegisterPage = () => {
   };
 
   return (
-    <AuthLayout title="Create your account" eyebrow="A fresh start" description="Your next great find starts here.">
+    <AuthLayout
+      title="Create your account"
+      eyebrow="A fresh start"
+      description="Your next great find starts here."
+    >
       {feedback.message && (
         <p
           className={`mt-[22px] rounded-[7px] border px-3.5 py-3 text-[13px] leading-[1.6] [overflow-wrap:anywhere] ${
@@ -73,7 +85,9 @@ const RegisterPage = () => {
           <legend className="sr-only">Account details</legend>
 
           <div>
-            <label className={LABEL_CLASSES} htmlFor="register-name">Full name</label>
+            <label className={LABEL_CLASSES} htmlFor="register-name">
+              Full name
+            </label>
             <input
               className={INPUT_CLASSES}
               id="register-name"
@@ -87,15 +101,21 @@ const RegisterPage = () => {
               minLength={2}
               maxLength={100}
               aria-invalid={Boolean(feedback.fieldErrors.name)}
-              aria-describedby={feedback.fieldErrors.name ? "register-name-error" : undefined}
+              aria-describedby={
+                feedback.fieldErrors.name ? "register-name-error" : undefined
+              }
             />
             {feedback.fieldErrors.name && (
-              <p className={FIELD_ERROR_CLASSES} id="register-name-error">{feedback.fieldErrors.name}</p>
+              <p className={FIELD_ERROR_CLASSES} id="register-name-error">
+                {feedback.fieldErrors.name}
+              </p>
             )}
           </div>
 
           <div className="mt-[21px]">
-            <label className={LABEL_CLASSES} htmlFor="register-email">Email address</label>
+            <label className={LABEL_CLASSES} htmlFor="register-email">
+              Email address
+            </label>
             <input
               className={INPUT_CLASSES}
               id="register-email"
@@ -110,15 +130,21 @@ const RegisterPage = () => {
               required
               maxLength={254}
               aria-invalid={Boolean(feedback.fieldErrors.email)}
-              aria-describedby={feedback.fieldErrors.email ? "register-email-error" : undefined}
+              aria-describedby={
+                feedback.fieldErrors.email ? "register-email-error" : undefined
+              }
             />
             {feedback.fieldErrors.email && (
-              <p className={FIELD_ERROR_CLASSES} id="register-email-error">{feedback.fieldErrors.email}</p>
+              <p className={FIELD_ERROR_CLASSES} id="register-email-error">
+                {feedback.fieldErrors.email}
+              </p>
             )}
           </div>
 
           <div className="mt-[21px]">
-            <label className={LABEL_CLASSES} htmlFor="register-password">Password</label>
+            <label className={LABEL_CLASSES} htmlFor="register-password">
+              Password
+            </label>
             <div className="relative">
               <input
                 className={`${INPUT_CLASSES} pr-[65px]`}
@@ -145,22 +171,49 @@ const RegisterPage = () => {
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
-            <p className="mt-2 text-[11px] leading-[1.55] text-muted" id="register-password-hint">Use 15–128 characters. A longer phrase works well.</p>
+            <p
+              className="mt-2 text-[11px] leading-[1.55] text-muted"
+              id="register-password-hint"
+            >
+              Use 15–128 characters. A longer phrase works well.
+            </p>
             {feedback.fieldErrors.password && (
-              <p className={FIELD_ERROR_CLASSES} id="register-password-error">{feedback.fieldErrors.password}</p>
+              <p className={FIELD_ERROR_CLASSES} id="register-password-error">
+                {feedback.fieldErrors.password}
+              </p>
             )}
           </div>
 
-          <button className={SUBMIT_CLASSES} type="submit" disabled={isSubmitting}>
+          <button
+            className={SUBMIT_CLASSES}
+            type="submit"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? (
-              <><span className={SPINNER_CLASSES} aria-hidden="true" />Creating account…</>
+              <>
+                <span className={SPINNER_CLASSES} aria-hidden="true" />
+                Creating account…
+              </>
             ) : (
-              <>Create account<span className="ml-auto text-[21px] leading-none" aria-hidden="true">↗</span></>
+              <>
+                Create account
+                <span
+                  className="ml-auto text-[21px] leading-none"
+                  aria-hidden="true"
+                >
+                  ↗
+                </span>
+              </>
             )}
           </button>
         </fieldset>
       </form>
-      <p className="mt-5 text-center text-sm text-muted">Already have an account? <Link className={LINK_CLASSES} to="/login">Sign in</Link></p>
+      <p className="mt-5 text-center text-sm text-muted">
+        Already have an account?{" "}
+        <Link className={LINK_CLASSES} to="/login">
+          Sign in
+        </Link>
+      </p>
     </AuthLayout>
   );
 };

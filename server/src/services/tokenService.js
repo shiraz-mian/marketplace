@@ -9,7 +9,11 @@ import { ApiError } from "../utils/ApiError.js";
 
 const invalidToken = (type) => {
   return type === "refresh"
-    ? new ApiError(401, "INVALID_REFRESH_TOKEN", "The refresh token is invalid. Please sign in again.")
+    ? new ApiError(
+        401,
+        "INVALID_REFRESH_TOKEN",
+        "The refresh token is invalid. Please sign in again.",
+      )
     : new ApiError(401, "INVALID_TOKEN", "The access token is invalid.");
 };
 
@@ -59,9 +63,18 @@ const verifyToken = (token, expectedType, lifetime) => {
   return claims;
 };
 
-const createAccessToken = (userId) => createToken(userId, "access", ACCESS_TOKEN_TTL_SECONDS);
-const createRefreshToken = (userId) => createToken(userId, "refresh", REFRESH_TOKEN_TTL_SECONDS);
-const verifyAccessToken = (token) => verifyToken(token, "access", ACCESS_TOKEN_TTL_SECONDS);
-const verifyRefreshToken = (token) => verifyToken(token, "refresh", REFRESH_TOKEN_TTL_SECONDS);
+const createAccessToken = (userId) =>
+  createToken(userId, "access", ACCESS_TOKEN_TTL_SECONDS);
+const createRefreshToken = (userId) =>
+  createToken(userId, "refresh", REFRESH_TOKEN_TTL_SECONDS);
+const verifyAccessToken = (token) =>
+  verifyToken(token, "access", ACCESS_TOKEN_TTL_SECONDS);
+const verifyRefreshToken = (token) =>
+  verifyToken(token, "refresh", REFRESH_TOKEN_TTL_SECONDS);
 
-export { createAccessToken, createRefreshToken, verifyAccessToken, verifyRefreshToken };
+export {
+  createAccessToken,
+  createRefreshToken,
+  verifyAccessToken,
+  verifyRefreshToken,
+};

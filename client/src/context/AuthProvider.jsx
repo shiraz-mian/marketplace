@@ -2,14 +2,23 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CanceledError } from "axios";
 import { protectedApiClient } from "../api/apiClient.js";
 import { attachAuthInterceptors } from "../api/authInterceptors.js";
-import { getCurrentCustomer, loginCustomer, logoutCustomer, refreshCustomer } from "../services/authService.js";
+import {
+  getCurrentCustomer,
+  loginCustomer,
+  logoutCustomer,
+  refreshCustomer,
+} from "../services/authService.js";
 import { getAuthError } from "../utils/getAuthError.js";
 import { AuthContext } from "./AuthContext.js";
 
 const GUEST = { status: "guest", user: null, error: "" };
 
 const AuthProvider = ({ children }) => {
-  const [auth, setAuth] = useState({ status: "checking", user: null, error: "" });
+  const [auth, setAuth] = useState({
+    status: "checking",
+    user: null,
+    error: "",
+  });
   const accessToken = useRef(null);
   const refreshPromise = useRef(null);
   const authVersion = useRef(0);
@@ -35,7 +44,8 @@ const AuthProvider = ({ children }) => {
         return result.accessToken;
       })
       .catch((error) => {
-        if (version === authVersion.current && error.response?.status === 401) expireAuth();
+        if (version === authVersion.current && error.response?.status === 401)
+          expireAuth();
         throw error;
       })
       .finally(() => {
@@ -52,7 +62,11 @@ const AuthProvider = ({ children }) => {
     } catch (error) {
       // A missing/expired refresh cookie already changed the state to guest.
       if (version !== authVersion.current || !mounted.current) return;
-      setAuth({ status: "error", user: null, error: getAuthError(error, "restore") });
+      setAuth({
+        status: "error",
+        user: null,
+        error: getAuthError(error, "restore"),
+      });
     }
   }, [refreshAuth]);
 
@@ -107,12 +121,19 @@ const AuthProvider = ({ children }) => {
   const reloadUser = useCallback(async () => {
     const version = authVersion.current;
     const user = await getCurrentCustomer();
-    if (version === authVersion.current && accessToken.current && mounted.current) {
+    if (
+      version === authVersion.current &&
+      accessToken.current &&
+      mounted.current
+    ) {
       setAuth((current) => ({ ...current, user }));
     }
   }, []);
 
-  const value = useMemo(() => ({ ...auth, login, logout, reloadUser, retryAuth }), [auth, login, logout, reloadUser, retryAuth]);
+  const value = useMemo(
+    () => ({ ...auth, login, logout, reloadUser, retryAuth }),
+    [auth, login, logout, reloadUser, retryAuth],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

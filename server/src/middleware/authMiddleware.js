@@ -8,7 +8,11 @@ const authenticate = async (req, res, next) => {
   const match = authorization?.match(/^Bearer (\S+)$/i);
 
   if (!match || match[1].length > 4096) {
-    throw new ApiError(401, "AUTH_REQUIRED", "A Bearer access token is required.");
+    throw new ApiError(
+      401,
+      "AUTH_REQUIRED",
+      "A Bearer access token is required.",
+    );
   }
 
   const claims = verifyAccessToken(match[1]);
@@ -21,7 +25,9 @@ const authorizeRoles = (...allowedRoles) => {
     allowedRoles.length === 0 ||
     allowedRoles.some((role) => !USER_ROLES.includes(role))
   ) {
-    throw new TypeError("authorizeRoles requires one or more valid customer, vendor or admin roles.");
+    throw new TypeError(
+      "authorizeRoles requires one or more valid customer, vendor or admin roles.",
+    );
   }
 
   return (req, res, next) => {
@@ -34,7 +40,11 @@ const authorizeRoles = (...allowedRoles) => {
       req.user.roles.some((role) => allowedRoles.includes(role));
 
     if (!hasAllowedRole) {
-      throw new ApiError(403, "FORBIDDEN", "You do not have permission to access this resource.");
+      throw new ApiError(
+        403,
+        "FORBIDDEN",
+        "You do not have permission to access this resource.",
+      );
     }
 
     next();

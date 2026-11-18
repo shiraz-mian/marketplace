@@ -9,7 +9,9 @@ const getClientOrigins = () => {
     throw new Error("CLIENT_ORIGINS must be configured in production.");
   }
 
-  const origins = (configuredOrigins || "http://localhost:5173,http://127.0.0.1:5173")
+  const origins = (
+    configuredOrigins || "http://localhost:5173,http://127.0.0.1:5173"
+  )
     .split(",")
     .map((origin) => origin.trim());
 
@@ -20,7 +22,9 @@ const getClientOrigins = () => {
       !["http:", "https:"].includes(url.protocol) ||
       (process.env.NODE_ENV === "production" && url.protocol !== "https:")
     ) {
-      throw new Error("CLIENT_ORIGINS must contain exact origins; production requires HTTPS.");
+      throw new Error(
+        "CLIENT_ORIGINS must contain exact origins; production requires HTTPS.",
+      );
     }
   }
 
@@ -38,7 +42,9 @@ const getAuthConfig = () => {
   const secret = process.env.JWT_SECRET;
 
   if (!secret || Buffer.byteLength(secret, "utf8") < 32) {
-    throw new Error("JWT_SECRET must be configured with at least 32 random bytes.");
+    throw new Error(
+      "JWT_SECRET must be configured with at least 32 random bytes.",
+    );
   }
 
   return {

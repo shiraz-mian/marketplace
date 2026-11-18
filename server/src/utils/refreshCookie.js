@@ -1,5 +1,8 @@
 import cookie from "cookie";
-import { REFRESH_COOKIE_NAME, getRefreshCookieOptions } from "../config/auth.js";
+import {
+  REFRESH_COOKIE_NAME,
+  getRefreshCookieOptions,
+} from "../config/auth.js";
 
 const readRefreshCookie = (req) => {
   const cookies = cookie.parse(req.get("Cookie") || "");

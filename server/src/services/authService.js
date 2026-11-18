@@ -8,7 +8,11 @@ import {
 } from "../config/auth.js";
 import { User } from "../models/userModel.js";
 import { ApiError } from "../utils/ApiError.js";
-import { createAccessToken, createRefreshToken, verifyRefreshToken } from "./tokenService.js";
+import {
+  createAccessToken,
+  createRefreshToken,
+  verifyRefreshToken,
+} from "./tokenService.js";
 
 const PASSWORD_HASH_OPTIONS = {
   type: argon2.argon2id,
@@ -86,7 +90,9 @@ const loginUser = async ({ email, password }) => {
   }
 
   const publicUser = toPublicUser(user);
-  const refreshExpiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_SECONDS * 1000);
+  const refreshExpiresAt = new Date(
+    Date.now() + REFRESH_TOKEN_TTL_SECONDS * 1000,
+  );
 
   return {
     ...toAccessTokenResponse(publicUser),
@@ -118,4 +124,10 @@ const refreshAccessToken = async (refreshToken) => {
   return toAccessTokenResponse(user);
 };
 
-export { initializeAuth, registerUser, loginUser, getAuthenticatedUser, refreshAccessToken };
+export {
+  initializeAuth,
+  registerUser,
+  loginUser,
+  getAuthenticatedUser,
+  refreshAccessToken,
+};

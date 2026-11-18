@@ -1,5 +1,6 @@
 import { ZodError } from "zod";
 import jwt from "jsonwebtoken";
+import multer from "multer";
 import { ApiError } from "../utils/ApiError.js";
 import { clearRefreshCookie } from "../utils/refreshCookie.js";
 
@@ -12,13 +13,25 @@ const errorHandler = (error, req, res, next) => {
     return next(error);
   }
 
-  const isRefreshRequest = /^\/api\/auth\/refresh\/?$/i.test(req.originalUrl.split("?")[0]);
+  const isRefreshRequest = /^\/api\/auth\/refresh\/?$/i.test(
+    req.originalUrl.split("?")[0],
+  );
   let statusCode = 500;
   let code = "INTERNAL_ERROR";
   let message = "Something went wrong. Please try again later.";
   let details;
 
-  if (error instanceof ZodError) {
+  if (error instanceof multer.MulterError) {
+    statusCode = error.code === "LIMIT_FILE_SIZE" ? 413 : 400;
+    code =
+      error.code === "LIMIT_FILE_SIZE"
+        ? "IMAGE_TOO_LARGE"
+        : "INVALID_IMAGE_UPLOAD";
+    message =
+      error.code === "LIMIT_FILE_SIZE"
+        ? "Choose an image smaller than 5 MB."
+        : "Upload one file using the image field.";
+  } else if (error instanceof ZodError) {
     statusCode = 422;
     code = "VALIDATION_FAILED";
     message = "Please check the submitted fields.";
@@ -46,6 +59,14 @@ const errorHandler = (error, req, res, next) => {
     statusCode = 409;
     code = "EMAIL_ALREADY_EXISTS";
     message = "An account with this email already exists.";
+  } else if (error.code === 11000 && error.keyPattern?.ownerId) {
+    statusCode = 409;
+    code = "VENDOR_APPLICATION_EXISTS";
+    message = "You already have a vendor application.";
+  } else if (error.code === 11000 && error.keyPattern?.code) {
+    statusCode = 409;
+    code = "COUPON_EXISTS";
+    message = "A coupon with this code already exists.";
   } else if (error.type === "entity.parse.failed") {
     statusCode = 400;
     code = "INVALID_JSON";

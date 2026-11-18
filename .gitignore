@@ -10,3 +10,6 @@ coverage/
 !.env.example
 
 *.log
+.npm-cache/
+.cache/
+artifacts/

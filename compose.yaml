@@ -1,0 +1,50 @@
+name: marketplace-local
+services:
+  redis:
+    image: redis:8.10.3-alpine
+    ports:
+      - "127.0.0.1:6379:6379"
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--appendfsync",
+        "everysec",
+        "--maxmemory",
+        "192mb",
+        "--maxmemory-policy",
+        "noeviction",
+      ]
+    mem_limit: 256m
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.6
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "127.0.0.1:9200:9200"
+    mem_limit: 1g
+    volumes:
+      - search-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fs 'http://localhost:9200/_cluster/health?wait_for_status=yellow' >/dev/null",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+volumes:
+  redis-data:
+  search-data:

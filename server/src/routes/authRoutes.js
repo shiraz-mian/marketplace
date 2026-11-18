@@ -1,8 +1,17 @@
 import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
-import { register, login, refresh, logout, getMe } from "../controllers/authController.js";
+import {
+  register,
+  login,
+  refresh,
+  logout,
+  getMe,
+} from "../controllers/authController.js";
 import { authenticate } from "../middleware/authMiddleware.js";
-import { requireTrustedOrigin, requireCsrfHeader } from "../middleware/csrfMiddleware.js";
+import {
+  requireTrustedOrigin,
+  requireCsrfHeader,
+} from "../middleware/csrfMiddleware.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const authRoutes = Router();
@@ -44,13 +53,32 @@ const refreshLimiter = rateLimit({
   legacyHeaders: false,
   message: {
     success: false,
-    error: { code: "RATE_LIMITED", message: "Too many refresh attempts. Try again later." },
+    error: {
+      code: "RATE_LIMITED",
+      message: "Too many refresh attempts. Try again later.",
+    },
   },
 });
 
-authRoutes.post("/login", requireTrustedOrigin, loginLimiter, asyncHandler(login));
-authRoutes.post("/refresh", requireTrustedOrigin, requireCsrfHeader, refreshLimiter, asyncHandler(refresh));
-authRoutes.post("/logout", requireTrustedOrigin, requireCsrfHeader, asyncHandler(logout));
+authRoutes.post(
+  "/login",
+  requireTrustedOrigin,
+  loginLimiter,
+  asyncHandler(login),
+);
+authRoutes.post(
+  "/refresh",
+  requireTrustedOrigin,
+  requireCsrfHeader,
+  refreshLimiter,
+  asyncHandler(refresh),
+);
+authRoutes.post(
+  "/logout",
+  requireTrustedOrigin,
+  requireCsrfHeader,
+  asyncHandler(logout),
+);
 authRoutes.get("/me", asyncHandler(authenticate), asyncHandler(getMe));
 
 export { authRoutes };

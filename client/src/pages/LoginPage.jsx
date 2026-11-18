@@ -1,13 +1,22 @@
 import { useRef, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { AuthLayout } from "../components/auth/AuthLayout.jsx";
-import { INPUT_CLASSES, LABEL_CLASSES, LINK_CLASSES, PASSWORD_TOGGLE_CLASSES, SPINNER_CLASSES, SUBMIT_CLASSES } from "../components/auth/authStyles.js";
+import {
+  INPUT_CLASSES,
+  LABEL_CLASSES,
+  LINK_CLASSES,
+  PASSWORD_TOGGLE_CLASSES,
+  SPINNER_CLASSES,
+  SUBMIT_CLASSES,
+} from "../components/auth/authStyles.js";
 import { useAuth } from "../hooks/useAuth.js";
 import { getAuthError } from "../utils/getAuthError.js";
+import { getLoginRedirect } from "../utils/loginRedirect.js";
 
 const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [values, setValues] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [feedback, setFeedback] = useState({ status: "idle", message: "" });
@@ -27,7 +36,10 @@ const LoginPage = () => {
     setFeedback({ status: "submitting", message: "" });
     try {
       await login({ email: values.email.trim(), password: values.password });
-      navigate("/account", { replace: true });
+      navigate(getLoginRedirect(location.state?.from), {
+        replace: true,
+        state: { catalogSearch: location.state?.catalogSearch },
+      });
     } catch (error) {
       setFeedback({ status: "error", message: getAuthError(error) });
     } finally {
@@ -36,13 +48,26 @@ const LoginPage = () => {
   };
 
   return (
-    <AuthLayout title="Welcome back" eyebrow="Your next discovery awaits" description="Sign in to your Marketplace account.">
-      {feedback.message && <p role="alert" className="mt-[22px] rounded-[7px] border border-[#edc5bf] bg-[#fff3ef] px-3.5 py-3 text-[13px] leading-relaxed text-danger">{feedback.message}</p>}
+    <AuthLayout
+      title="Welcome back"
+      eyebrow="Your next discovery awaits"
+      description="Sign in to your Marketplace account."
+    >
+      {feedback.message && (
+        <p
+          role="alert"
+          className="mt-[22px] rounded-[7px] border border-[#edc5bf] bg-[#fff3ef] px-3.5 py-3 text-[13px] leading-relaxed text-danger"
+        >
+          {feedback.message}
+        </p>
+      )}
       <form onSubmit={handleSubmit} aria-busy={isSubmitting}>
         <fieldset className="mt-7 min-w-0" disabled={isSubmitting}>
           <legend className="sr-only">Sign-in details</legend>
           <div>
-            <label className={LABEL_CLASSES} htmlFor="login-email">Email address</label>
+            <label className={LABEL_CLASSES} htmlFor="login-email">
+              Email address
+            </label>
             <input
               className={INPUT_CLASSES}
               id="login-email"
@@ -59,7 +84,9 @@ const LoginPage = () => {
             />
           </div>
           <div className="mt-[21px]">
-            <label className={LABEL_CLASSES} htmlFor="login-password">Password</label>
+            <label className={LABEL_CLASSES} htmlFor="login-password">
+              Password
+            </label>
             <div className="relative">
               <input
                 className={`${INPUT_CLASSES} pr-[65px]`}
@@ -84,12 +111,36 @@ const LoginPage = () => {
               </button>
             </div>
           </div>
-          <button className={SUBMIT_CLASSES} type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <><span className={SPINNER_CLASSES} aria-hidden="true" />Signing in…</> : <>Sign in<span className="ml-auto text-[21px] leading-none" aria-hidden="true">↗</span></>}
+          <button
+            className={SUBMIT_CLASSES}
+            type="submit"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <span className={SPINNER_CLASSES} aria-hidden="true" />
+                Signing in…
+              </>
+            ) : (
+              <>
+                Sign in
+                <span
+                  className="ml-auto text-[21px] leading-none"
+                  aria-hidden="true"
+                >
+                  ↗
+                </span>
+              </>
+            )}
           </button>
         </fieldset>
       </form>
-      <p className="mt-5 text-center text-sm text-muted">New to Marketplace? <Link className={LINK_CLASSES} to="/register">Create an account</Link></p>
+      <p className="mt-5 text-center text-sm text-muted">
+        New to Marketplace?{" "}
+        <Link className={LINK_CLASSES} to="/register">
+          Create an account
+        </Link>
+      </p>
     </AuthLayout>
   );
 };

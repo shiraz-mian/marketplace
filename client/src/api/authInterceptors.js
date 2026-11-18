@@ -1,6 +1,13 @@
-const REFRESHABLE_ERRORS = new Set(["TOKEN_EXPIRED", "INVALID_TOKEN", "AUTH_REQUIRED"]);
+const REFRESHABLE_ERRORS = new Set([
+  "TOKEN_EXPIRED",
+  "INVALID_TOKEN",
+  "AUTH_REQUIRED",
+]);
 
-const attachAuthInterceptors = (client, { getAccessToken, refreshAuth, expireAuth }) => {
+const attachAuthInterceptors = (
+  client,
+  { getAccessToken, refreshAuth, expireAuth },
+) => {
   const requestId = client.interceptors.request.use((config) => {
     const token = getAccessToken();
     if (token) config.headers.set("Authorization", `Bearer ${token}`);
@@ -16,7 +23,9 @@ const attachAuthInterceptors = (client, { getAccessToken, refreshAuth, expireAut
       const sentToken = config?.headers?.get("Authorization");
 
       if (
-        !config || !currentToken || !sentToken ||
+        !config ||
+        !currentToken ||
+        !sentToken ||
         error.response?.status !== 401 ||
         !REFRESHABLE_ERRORS.has(error.response?.data?.error?.code)
       ) {

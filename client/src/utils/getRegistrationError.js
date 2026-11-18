@@ -15,11 +15,17 @@ const getRegistrationError = (error) => {
   if (!isAxiosError(error)) return fallback;
 
   if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
-    return { ...fallback, message: "The request took too long. Please try again." };
+    return {
+      ...fallback,
+      message: "The request took too long. Please try again.",
+    };
   }
 
   if (!error.response) {
-    return { ...fallback, message: "We couldn't reach the server. Please try again in a moment." };
+    return {
+      ...fallback,
+      message: "We couldn't reach the server. Please try again in a moment.",
+    };
   }
 
   const apiError = error.response.data?.error;
@@ -32,12 +38,17 @@ const getRegistrationError = (error) => {
   }
 
   if (error.response.status === 429) {
-    return { ...fallback, message: "Too many attempts. Please wait a while before trying again." };
+    return {
+      ...fallback,
+      message: "Too many attempts. Please wait a while before trying again.",
+    };
   }
 
   if (apiError?.code === "VALIDATION_FAILED") {
     const fieldErrors = {};
-    for (const issue of Array.isArray(apiError.details) ? apiError.details : []) {
+    for (const issue of Array.isArray(apiError.details)
+      ? apiError.details
+      : []) {
       if (Object.hasOwn(FIELD_MESSAGES, issue?.field)) {
         fieldErrors[issue.field] = FIELD_MESSAGES[issue.field];
       }
