@@ -1,4 +1,5 @@
 import express from "express";
+import { fileURLToPath } from "node:url";
 import { healthRoutes } from "./routes/healthRoutes.js";
 import { authRoutes } from "./routes/authRoutes.js";
 import { vendorRoutes } from "./routes/vendorRoutes.js";
@@ -36,6 +37,20 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/vendor/orders", vendorOrderRoutes);
 app.use("/api/admin", adminCommerceRoutes);
 app.use("/api/products/:productId/reviews", reviewRoutes);
+
+// API paths always return API errors, even when the React app is served here.
+app.use("/api", notFound);
+
+if (process.env.SERVE_CLIENT === "true") {
+  const clientDir = fileURLToPath(
+    new URL("../../client/dist/", import.meta.url),
+  );
+  app.use(express.static(clientDir));
+  app.get(/.*/, (req, res, next) => {
+    if (!req.accepts("html")) return next();
+    return res.sendFile("index.html", { root: clientDir });
+  });
+}
 
 app.use(notFound);
 app.use(errorHandler);

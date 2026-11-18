@@ -3,9 +3,11 @@ import { formatPrice } from "../../utils/productPrice.js";
 import { StatusBadge } from "../marketplace/ui.jsx";
 const OrderSummary = ({ order }) => (
   <div className="space-y-6">
-    <div className="flex flex-wrap justify-between gap-4">
+    <div className="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <p className="text-xs break-all text-muted">Order {order.id}</p>
+        <p className="text-sm font-medium break-all text-ink">
+          Order ID: {order.id}
+        </p>
         <p className="mt-2 text-sm text-muted">
           {new Date(order.createdAt).toLocaleString("en-IN")}
         </p>
