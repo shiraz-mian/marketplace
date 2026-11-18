@@ -19,7 +19,9 @@ const ensure = async () => {
         await client.indices.create({
           index,
           mappings: PRODUCT_SEARCH_MAPPING,
-          settings: { number_of_shards: 1, number_of_replicas: 0 },
+          ...(process.env.ELASTICSEARCH_SERVERLESS === "true"
+            ? {}
+            : { settings: { number_of_shards: 1, number_of_replicas: 0 } }),
         });
       } catch (error) {
         if (
