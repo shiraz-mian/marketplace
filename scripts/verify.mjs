@@ -49,16 +49,15 @@ const steps = [
   ...(includeServices
     ? [
         {
-          name: "Redis and Elasticsearch integration",
+          name: "Redis integration",
           cwd: path.join(root, "server"),
           args: [
             "--test",
             "--test-concurrency=1",
             "--test-reporter=spec",
             "integration/cart.test.js",
-            "integration/productSearch.test.js",
           ],
-          env: { REDIS_INTEGRATION: "1", ELASTICSEARCH_INTEGRATION: "1" },
+          env: { REDIS_INTEGRATION: "1" },
         },
       ]
     : []),

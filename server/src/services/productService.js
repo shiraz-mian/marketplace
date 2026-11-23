@@ -60,7 +60,7 @@ const createProduct = async (vendor, input) => {
 const updateProduct = async (productId, vendorId, input) => {
   const product = await Product.findOneAndUpdate(
     { _id: productId, vendorId, status: { $ne: "archived" } },
-    { $set: { ...input, searchSyncPending: true }, $inc: { searchVersion: 1 } },
+    { $set: input },
     { new: true, runValidators: true },
   ).select(PRODUCT_FIELDS);
   if (!product)
@@ -72,8 +72,7 @@ const archiveProduct = async (productId, vendorId) => {
   const product = await Product.findOneAndUpdate(
     { _id: productId, vendorId },
     {
-      $set: { status: "archived", searchSyncPending: true },
-      $inc: { searchVersion: 1 },
+      $set: { status: "archived" },
     },
     { new: true, runValidators: true },
   );

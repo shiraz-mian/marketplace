@@ -45,7 +45,7 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 Keep the other local defaults from `.env.example`. Keep `.env` private. The React
 client does not need an environment file.
 
-## 3. Start Redis and Elasticsearch
+## 3. Start Redis
 
 ```powershell
 npm run services:up
@@ -55,11 +55,10 @@ If the existing Marketplace containers already use ports 6379 and 9200, start
 those instead:
 
 ```powershell
-docker start marketplace-redis marketplace-elasticsearch
+docker start marketplace-redis
 ```
 
-Use one set of containers. The backend defaults to `redis://127.0.0.1:6379` and
-`http://127.0.0.1:9200`.
+The backend defaults to `redis://127.0.0.1:6379`.
 
 ## 4. Start the application
 
@@ -87,11 +86,13 @@ npm --prefix server run admin:grant -- your-email@example.com
 
 To create a store, use another account to apply under **My store**. Approve its
 application at `/admin/vendors`, then add products through `/vendor/products`.
-If existing products need search indexing, run:
+Create the MongoDB Atlas Search index once (using your Atlas connection in `server/.env`):
 
 ```powershell
-npm --prefix server run search:reindex
+npm --prefix server run search:setup
 ```
+
+Wait until the `marketplace_products` and `marketplace_suggestions` indexes are ready in Atlas before searching by keyword.
 
 ## Optional connections
 

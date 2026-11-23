@@ -148,12 +148,7 @@ describe(
           const doc = new Product({
             ...existing,
             ...update.$set,
-            ...(update.$inc?.searchVersion
-              ? {
-                  searchVersion:
-                    (existing.searchVersion ?? 0) + update.$inc.searchVersion,
-                }
-              : {}),
+
             updatedAt: new Date(),
           });
           await doc.validate();
@@ -547,26 +542,16 @@ describe(
       }
     });
 
-    test("creation, edits and archives durably queue search revisions without exposing internal fields", async () => {
+    test("product edits and archives are reflected in MongoDB", async () => {
       const created = await create();
       const id = created.payload.data.product.id;
-      assert.equal(products.get(id).searchVersion, 1);
-      assert.equal(products.get(id).searchSyncPending, true);
-      assert.equal(
-        Object.hasOwn(created.payload.data.product, "searchVersion"),
-        false,
-      );
-      products.get(id).searchSyncPending = false;
       await request(`/vendor/products/${id}`, {
         method: "PATCH",
         body: { stock: 7 },
       });
-      assert.equal(products.get(id).searchVersion, 2);
-      assert.equal(products.get(id).searchSyncPending, true);
-      products.get(id).searchSyncPending = false;
+      assert.equal(products.get(id).stock, 7);
       await request(`/vendor/products/${id}`, { method: "DELETE" });
-      assert.equal(products.get(id).searchVersion, 3);
-      assert.equal(products.get(id).searchSyncPending, true);
+      assert.equal(products.get(id).status, "archived");
     });
   },
 );

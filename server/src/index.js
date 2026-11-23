@@ -5,7 +5,6 @@ import { User } from "./models/userModel.js";
 import { Vendor } from "./models/vendorModel.js";
 import { Product } from "./models/productModel.js";
 import { initializeAuth } from "./services/authService.js";
-import { startProductSearchSync } from "./services/productSearchSync.js";
 import { Order } from "./models/orderModel.js";
 import { Coupon } from "./models/couponModel.js";
 import { Review } from "./models/reviewModel.js";
@@ -30,8 +29,6 @@ const startServer = async () => {
 
     server.once("listening", () => {
       console.log(`Backend running at http://localhost:${PORT}`);
-      const stopSearchSync = startProductSearchSync();
-      server.once("close", stopSearchSync);
       server.once("close", startOrderReconciliation());
     });
 

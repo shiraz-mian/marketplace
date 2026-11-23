@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button, Feedback } from "./ui.jsx";
+import { ProductSearchInput } from "./ProductSearchInput.jsx";
 import {
   CATALOG_SORTS,
   EMPTY_CATALOG_FILTERS,
@@ -80,26 +81,10 @@ const CatalogSearchForm = ({ initialValues, onSearch, onClear }) => {
           <label htmlFor="catalog-q" className="sr-only">
             Search products
           </label>
-          <div className="relative">
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              className="pointer-events-none absolute top-3 left-3 h-5 w-5 text-muted"
-            >
-              <circle cx="10.5" cy="10.5" r="6.5" />
-              <path d="m16 16 4.5 4.5" />
-            </svg>
-            <input
-              {...fieldProps("q")}
-              type="search"
-              maxLength={100}
-              placeholder="Search products or stores"
-              className={`${inputClass} pl-10`}
-            />
-          </div>
+          <ProductSearchInput
+            fieldProps={fieldProps("q")}
+            inputClass={inputClass}
+          />
           {fieldError("q")}
         </div>
         <Button type="submit" className="shrink-0">

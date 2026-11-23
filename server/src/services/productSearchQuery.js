@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+
 const buildProductSearchQuery = (input) => {
   const {
     q,
@@ -10,57 +12,69 @@ const buildProductSearchQuery = (input) => {
     page,
     limit,
   } = input;
-  const filter = [{ term: { status: "active" } }];
-  if (category) filter.push({ term: { category } });
-  if (vendorId) filter.push({ term: { vendorId } });
+  const filter = { status: "active" };
+  if (category) filter.category = category;
+  if (vendorId) filter.vendorId = new mongoose.Types.ObjectId(vendorId);
   if (minPriceInPaise !== undefined || maxPriceInPaise !== undefined) {
-    filter.push({
-      range: {
-        priceInPaise: {
-          ...(minPriceInPaise !== undefined ? { gte: minPriceInPaise } : {}),
-          ...(maxPriceInPaise !== undefined ? { lte: maxPriceInPaise } : {}),
+    filter.priceInPaise = {
+      ...(minPriceInPaise !== undefined ? { $gte: minPriceInPaise } : {}),
+      ...(maxPriceInPaise !== undefined ? { $lte: maxPriceInPaise } : {}),
+    };
+  }
+  if (inStock !== undefined) filter.stock = inStock ? { $gt: 0 } : { $lte: 0 };
+
+  const pipeline = [];
+  if (q) {
+    pipeline.push({
+      $search: {
+        index: "marketplace_products",
+        compound: {
+          should: [
+            {
+              text: {
+                query: q,
+                path: "title",
+                matchCriteria: "all",
+                fuzzy: { maxEdits: 1 },
+                score: { boost: { value: 3 } },
+              },
+            },
+            {
+              text: {
+                query: q,
+                path: ["description", "storeName"],
+                matchCriteria: "all",
+                fuzzy: { maxEdits: 1 },
+              },
+            },
+          ],
+          minimumShouldMatch: 1,
         },
       },
     });
   }
-  if (inStock !== undefined)
-    filter.push({ range: { stock: inStock ? { gt: 0 } : { lte: 0 } } });
-  const primarySort =
+  pipeline.push({ $match: filter });
+  if (q && sort === "relevance")
+    pipeline.push({ $addFields: { searchScore: { $meta: "searchScore" } } });
+  const order =
     sort === "price_asc"
-      ? { priceInPaise: "asc" }
+      ? { priceInPaise: 1, _id: 1 }
       : sort === "price_desc"
-        ? { priceInPaise: "desc" }
-        : sort === "relevance" && q
-          ? { _score: "desc" }
-          : { createdAt: "desc" };
-  return {
-    from: (page - 1) * limit,
-    size: limit,
-    track_total_hits: true,
-    _source: false,
-    timeout: "2s",
-    allow_partial_search_results: false,
-    query: {
-      bool: {
-        filter,
-        must: q
-          ? [
-              {
-                multi_match: {
-                  query: q,
-                  fields: ["title^3", "description", "storeName"],
-                  operator: "and",
-                  fuzziness: "AUTO",
-                  prefix_length: 1,
-                  max_expansions: 25,
-                },
-              },
-            ]
-          : [{ match_all: {} }],
-      },
+        ? { priceInPaise: -1, _id: 1 }
+        : q && sort === "relevance"
+          ? { searchScore: -1, _id: 1 }
+          : { createdAt: -1, _id: 1 };
+  pipeline.push({
+    $facet: {
+      products: [
+        { $sort: order },
+        { $skip: (page - 1) * limit },
+        { $limit: limit },
+      ],
+      count: [{ $count: "total" }],
     },
-    sort: [primarySort, { id: "asc" }],
-  };
+  });
+  return pipeline;
 };
 
 export { buildProductSearchQuery };

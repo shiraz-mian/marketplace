@@ -49,6 +49,18 @@ const listCatalog = async (params, { signal } = {}) =>
   readList(await apiClient.get("/products", { params, signal }), "products");
 const searchCatalog = async (params, { signal } = {}) =>
   readList(await getCatalogSearch(params, { signal }), "products");
+const getProductSuggestions = async (q, { signal } = {}) => {
+  const data = readData(
+    await apiClient.get("/products/suggestions", {
+      params: { q },
+      signal,
+      timeout: 10000,
+    }),
+  );
+  if (!Array.isArray(data.suggestions))
+    throw new Error("Unexpected suggestions response.");
+  return data.suggestions;
+};
 const getCatalogProduct = async (id, { signal } = {}) =>
   readData(await apiClient.get(`/products/${id}`, { signal })).product;
 const listMyProducts = async (params, { signal } = {}) =>
@@ -88,6 +100,7 @@ export {
   reviewVendorApplication,
   listCatalog,
   searchCatalog,
+  getProductSuggestions,
   getCatalogProduct,
   listMyProducts,
   getMyProduct,

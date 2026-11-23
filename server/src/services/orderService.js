@@ -223,8 +223,7 @@ const recordCapturedPayment = async (orderId, payment) => {
             stock: { $gte: line.quantity },
           },
           {
-            $inc: { stock: -line.quantity, searchVersion: 1 },
-            $set: { searchSyncPending: true },
+            $inc: { stock: -line.quantity },
           },
           { session },
         );
