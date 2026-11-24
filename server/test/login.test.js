@@ -160,6 +160,7 @@ describe(
         "iss",
         "jti",
         "sub",
+        "tokenVersion",
         "type",
       ]);
       const refreshCookie = response.headers.get("set-cookie");

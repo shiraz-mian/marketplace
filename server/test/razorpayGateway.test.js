@@ -98,6 +98,10 @@ test("only Route refunds request transfer reversal", async (context) => {
   context.mock.method(globalThis, "fetch", async (url, options) => {
     assert.equal(url, "https://api.razorpay.com/v1/payments/pay_test/refund");
     assert.equal(options.method, "POST");
+    assert.equal(
+      options.headers["X-Refund-Idempotency"],
+      "507f1f77bcf86cd799439011",
+    );
     calls.push(JSON.parse(options.body));
     return Response.json({ id: "rfnd_test" });
   });

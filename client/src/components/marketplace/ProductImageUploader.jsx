@@ -45,7 +45,12 @@ const ProductImageUploader = ({ product, onUploaded }) => {
     <section className="rounded-2xl border border-line bg-white p-6">
       <h2 className="text-xl font-semibold">Product image</h2>
       <div className="mt-4">
-        <ProductImage src={product.imageUrl} title={product.title} />
+        <ProductImage
+          src={product.imageUrl}
+          title={product.title}
+          productId={product.id}
+          vendor
+        />
       </div>
       <Feedback {...feedback} />
       <form onSubmit={submit} className="mt-5">

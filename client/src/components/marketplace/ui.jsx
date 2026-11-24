@@ -1,4 +1,8 @@
 import { useState } from "react";
+import {
+  getCatalogProduct,
+  getMyProduct,
+} from "../../services/marketplaceService.js";
 
 const Button = ({ secondary = false, className = "", children, ...props }) => (
   <button
@@ -64,18 +68,46 @@ const Pagination = ({ pagination, onPageChange, busy, maxPage = Infinity }) =>
       </div>
     </div>
   ) : null;
-const ProductImage = ({ src, title, className = "" }) => {
-  const [failedUrl, setFailedUrl] = useState(null);
+const ProductImage = ({
+  src,
+  title,
+  productId,
+  vendor = false,
+  className = "",
+}) => {
+  const [replacement, setReplacement] = useState(null);
+  const currentSrc =
+    replacement && replacement.source === src ? replacement.url : src;
+  const handleError = async () => {
+    if (!productId || replacement?.source === src) {
+      setReplacement({ source: src, url: null });
+      return;
+    }
+    try {
+      const product = await (vendor
+        ? getMyProduct(productId)
+        : getCatalogProduct(productId));
+      setReplacement({
+        source: src,
+        url:
+          product.imageUrl && product.imageUrl !== src
+            ? product.imageUrl
+            : null,
+      });
+    } catch {
+      setReplacement({ source: src, url: null });
+    }
+  };
   return (
     <div
       className={`grid aspect-[4/3] place-items-center overflow-hidden rounded-xl bg-[#edf0e8] ${className}`}
     >
-      {src && src !== failedUrl ? (
+      {currentSrc ? (
         <img
-          src={src}
+          src={currentSrc}
           alt={title}
           loading="lazy"
-          onError={() => setFailedUrl(src)}
+          onError={handleError}
           className="h-full w-full object-contain p-4"
         />
       ) : (

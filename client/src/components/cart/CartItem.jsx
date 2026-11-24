@@ -30,7 +30,11 @@ const CartItem = ({ item, index, busy, onUpdate, onRemove }) => {
       aria-label={title}
     >
       <div className="grid gap-4 sm:grid-cols-[140px_1fr]">
-        <ProductImage src={product?.imageUrl} title={title} />
+        <ProductImage
+          src={product?.imageUrl}
+          title={title}
+          productId={product?.id}
+        />
         <div className="min-w-0">
           {product ? (
             <Link

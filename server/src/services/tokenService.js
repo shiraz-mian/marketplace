@@ -17,10 +17,10 @@ const invalidToken = (type) => {
     : new ApiError(401, "INVALID_TOKEN", "The access token is invalid.");
 };
 
-const createToken = (userId, type, lifetime) => {
+const createToken = (userId, type, lifetime, tokenVersion) => {
   const { secret, issuer, audience } = getAuthConfig();
 
-  return jwt.sign({ type }, secret, {
+  return jwt.sign({ type, tokenVersion }, secret, {
     algorithm: "HS256",
     subject: userId,
     jwtid: randomUUID(),
@@ -49,6 +49,9 @@ const verifyToken = (token, expectedType, lifetime) => {
     typeof claims !== "object" ||
     claims === null ||
     claims.type !== expectedType ||
+    (claims.tokenVersion !== undefined &&
+      (!Number.isSafeInteger(claims.tokenVersion) ||
+        claims.tokenVersion < 0)) ||
     typeof claims.sub !== "string" ||
     !/^[a-fA-F0-9]{24}$/.test(claims.sub) ||
     !Number.isInteger(claims.iat) ||
@@ -63,10 +66,10 @@ const verifyToken = (token, expectedType, lifetime) => {
   return claims;
 };
 
-const createAccessToken = (userId) =>
-  createToken(userId, "access", ACCESS_TOKEN_TTL_SECONDS);
-const createRefreshToken = (userId) =>
-  createToken(userId, "refresh", REFRESH_TOKEN_TTL_SECONDS);
+const createAccessToken = (userId, tokenVersion = 0) =>
+  createToken(userId, "access", ACCESS_TOKEN_TTL_SECONDS, tokenVersion);
+const createRefreshToken = (userId, tokenVersion = 0) =>
+  createToken(userId, "refresh", REFRESH_TOKEN_TTL_SECONDS, tokenVersion);
 const verifyAccessToken = (token) =>
   verifyToken(token, "access", ACCESS_TOKEN_TTL_SECONDS);
 const verifyRefreshToken = (token) =>

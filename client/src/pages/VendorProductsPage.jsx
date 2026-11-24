@@ -76,7 +76,12 @@ const VendorProductsPage = () => {
               key={product.id}
               className="rounded-2xl border border-line bg-white p-4"
             >
-              <ProductImage src={product.imageUrl} title={product.title} />
+              <ProductImage
+                src={product.imageUrl}
+                title={product.title}
+                productId={product.id}
+                vendor
+              />
               <div className="mt-4">
                 <StatusBadge status={product.status} />
                 <h2 className="mt-3 text-lg font-semibold">{product.title}</h2>

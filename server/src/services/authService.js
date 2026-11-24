@@ -45,9 +45,9 @@ const toPublicUser = (user) => {
   };
 };
 
-const toAccessTokenResponse = (user) => ({
+const toAccessTokenResponse = (user, tokenVersion) => ({
   user,
-  accessToken: createAccessToken(user.id),
+  accessToken: createAccessToken(user.id, tokenVersion),
   tokenType: "Bearer",
   expiresIn: ACCESS_TOKEN_TTL_SECONDS,
 });
@@ -95,15 +95,19 @@ const loginUser = async ({ email, password }) => {
   );
 
   return {
-    ...toAccessTokenResponse(publicUser),
-    refreshToken: createRefreshToken(publicUser.id),
+    ...toAccessTokenResponse(publicUser, user.tokenVersion ?? 0),
+    refreshToken: createRefreshToken(publicUser.id, user.tokenVersion ?? 0),
     refreshExpiresAt,
   };
 };
 
-const getAuthenticatedUser = async (userId) => {
+const getAuthenticatedUser = async (
+  userId,
+  tokenVersion = 0,
+  type = "access",
+) => {
   const user = await User.findById(userId).select(
-    "name emailNormalized roles status createdAt",
+    "name emailNormalized roles status createdAt tokenVersion",
   );
 
   if (!user || user.status !== "active") {
@@ -114,14 +118,49 @@ const getAuthenticatedUser = async (userId) => {
     );
   }
 
+  if ((user.tokenVersion ?? 0) !== tokenVersion) {
+    throw new ApiError(
+      401,
+      type === "refresh" ? "INVALID_REFRESH_TOKEN" : "INVALID_TOKEN",
+      "The token is no longer valid. Please sign in again.",
+    );
+  }
+
   return toPublicUser(user);
 };
 
 const refreshAccessToken = async (refreshToken) => {
   const claims = verifyRefreshToken(refreshToken);
-  const user = await getAuthenticatedUser(claims.sub);
+  const version = claims.tokenVersion ?? 0;
+  const user = await getAuthenticatedUser(claims.sub, version, "refresh");
 
-  return toAccessTokenResponse(user);
+  return toAccessTokenResponse(user, version);
+};
+
+const logoutUser = async (refreshToken) => {
+  let claims;
+  try {
+    claims = verifyRefreshToken(refreshToken);
+  } catch (error) {
+    if (
+      error instanceof ApiError ||
+      ["JsonWebTokenError", "TokenExpiredError", "NotBeforeError"].includes(
+        error.name,
+      )
+    )
+      return;
+    throw error;
+  }
+  const version = claims.tokenVersion ?? 0;
+  await User.updateOne(
+    {
+      _id: claims.sub,
+      ...(version === 0
+        ? { $or: [{ tokenVersion: 0 }, { tokenVersion: { $exists: false } }] }
+        : { tokenVersion: version }),
+    },
+    { $inc: { tokenVersion: 1 } },
+  );
 };
 
 export {
@@ -130,4 +169,5 @@ export {
   loginUser,
   getAuthenticatedUser,
   refreshAccessToken,
+  logoutUser,
 };

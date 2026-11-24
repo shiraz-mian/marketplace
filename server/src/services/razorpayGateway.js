@@ -2,7 +2,13 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { getPaymentConfig, usesRouteTransfers } from "../config/checkout.js";
 import { ApiError } from "../utils/ApiError.js";
 
-const request = async (method, resource, body, version = "v1") => {
+const request = async (
+  method,
+  resource,
+  body,
+  version = "v1",
+  extraHeaders = {},
+) => {
   const { keyId, secret } = getPaymentConfig();
   let response;
   try {
@@ -11,6 +17,7 @@ const request = async (method, resource, body, version = "v1") => {
       headers: {
         Authorization: `Basic ${Buffer.from(`${keyId}:${secret}`).toString("base64")}`,
         "Content-Type": "application/json",
+        ...extraHeaders,
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
       signal: AbortSignal.timeout(10000),
@@ -92,12 +99,18 @@ const razorpayGateway = {
   releaseTransfer: (id) =>
     request("PATCH", `transfers/${id}`, { on_hold: false }),
   refund: (paymentId, order) =>
-    request("POST", `payments/${paymentId}/refund`, {
-      amount: order.totalInPaise,
-      ...(usesRouteTransfers(order) ? { reverse_all: true } : {}),
-      receipt: String(order._id),
-      notes: { reason: "Marketplace could not fulfill this order" },
-    }),
+    request(
+      "POST",
+      `payments/${paymentId}/refund`,
+      {
+        amount: order.totalInPaise,
+        ...(usesRouteTransfers(order) ? { reverse_all: true } : {}),
+        receipt: String(order._id),
+        notes: { reason: "Marketplace could not fulfill this order" },
+      },
+      "v1",
+      { "X-Refund-Idempotency": String(order._id) },
+    ),
   fetchRefunds: (id) => request("GET", `payments/${id}/refunds`),
   fetchAccount: (id) => request("GET", `accounts/${id}`, undefined, "v2"),
 };

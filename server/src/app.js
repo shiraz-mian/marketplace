@@ -18,6 +18,7 @@ import { asyncHandler } from "./utils/asyncHandler.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 
 const app = express();
+if (process.env.RENDER === "true") app.set("trust proxy", 1);
 
 app.disable("x-powered-by");
 app.post(

@@ -17,7 +17,10 @@ import { reviewService } from "../src/services/reviewService.js";
 import { analyticsService } from "../src/services/analyticsService.js";
 import { razorpayGateway } from "../src/services/razorpayGateway.js";
 import { cartStorage } from "../src/services/cartStorage.js";
-import { createAccessToken } from "../src/services/tokenService.js";
+import {
+  createAccessToken,
+  createRefreshToken,
+} from "../src/services/tokenService.js";
 
 describe(
   "Commerce with real isolated MongoDB transactions; Razorpay transport simulated",
@@ -247,6 +250,42 @@ describe(
       if (db) await db.stop();
     });
 
+    test("logout revokes tokens in MongoDB and an old cookie cannot revoke a newer login", async () => {
+      const id = String(buyer._id);
+      await User.collection.updateOne(
+        { _id: buyer._id },
+        { $unset: { tokenVersion: "" } },
+      );
+      const oldAccess = createAccessToken(id);
+      const oldCookie = `marketplace_refresh=${createRefreshToken(id)}`;
+      const signOut = () =>
+        fetch(`${base}/api/auth/logout`, {
+          method: "POST",
+          headers: { Cookie: oldCookie, "X-Requested-With": "XMLHttpRequest" },
+        });
+      assert.equal((await signOut()).status, 200);
+      assert.equal(
+        (
+          await fetch(`${base}/api/auth/me`, {
+            headers: { Authorization: `Bearer ${oldAccess}` },
+          })
+        ).status,
+        401,
+      );
+      const updated = await User.findById(id);
+      assert.equal(updated.tokenVersion, 1);
+      assert.equal((await signOut()).status, 200);
+      assert.equal((await User.findById(id)).tokenVersion, 1);
+      const newAccess = createAccessToken(id, updated.tokenVersion);
+      assert.equal(
+        (
+          await fetch(`${base}/api/auth/me`, {
+            headers: { Authorization: `Bearer ${newAccess}` },
+          })
+        ).status,
+        200,
+      );
+    });
     test("checkout calculates vendor splits and stores one order for retried requests", async () => {
       const input = { address, couponCode: "", cartVersion: cart.version },
         operation = randomUUID();
@@ -409,6 +448,60 @@ describe(
       );
       assert.equal(refunds.length, 1);
       assert.equal(refunds[0].arguments[1].paymentFlow, "standard");
+    });
+    test("refunds resume after a crash when the idempotency key was saved", async () => {
+      process.env.RAZORPAY_PAYMENT_FLOW = "standard";
+      const order = await checkout();
+      const payment = await capture(order);
+      await Order.updateOne(
+        { _id: order.id },
+        { $set: { expiresAt: new Date(0) } },
+      );
+      await orderService.recordCapturedPayment(order.id, payment);
+      await Order.updateOne(
+        { _id: order.id },
+        {
+          $set: {
+            refundAttemptedAt: new Date(),
+            refundIdempotencyKey: order.id,
+          },
+        },
+      );
+      await paymentService.reconcileOrder(order.id);
+      await paymentService.reconcileOrder(order.id);
+      assert.equal((await Order.findById(order.id)).paymentStatus, "refunded");
+      assert.equal(
+        razorpayGateway.refund.mock.calls.filter(
+          (call) => String(call.arguments[1]._id) === order.id,
+        ).length,
+        1,
+      );
+    });
+    test("legacy uncertain refunds are not repeated automatically", async (context) => {
+      context.mock.method(console, "error", () => {});
+      process.env.RAZORPAY_PAYMENT_FLOW = "standard";
+      const order = await checkout();
+      const payment = await capture(order);
+      await Order.updateOne(
+        { _id: order.id },
+        { $set: { expiresAt: new Date(0) } },
+      );
+      await orderService.recordCapturedPayment(order.id, payment);
+      await Order.updateOne(
+        { _id: order.id },
+        { $set: { refundAttemptedAt: new Date() } },
+      );
+      await paymentService.reconcileOrder(order.id);
+      assert.equal(
+        (await Order.findById(order.id)).paymentStatus,
+        "refund_pending",
+      );
+      assert.equal(
+        razorpayGateway.refund.mock.calls.filter(
+          (call) => String(call.arguments[1]._id) === order.id,
+        ).length,
+        0,
+      );
     });
     test("order and invoice are scoped to their customer", async () => {
       const order = await checkout();

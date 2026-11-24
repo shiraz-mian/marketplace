@@ -9,7 +9,11 @@ const CatalogProductCard = ({ product, catalogSearch }) => (
       state={{ catalogSearch }}
       className="block rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand"
     >
-      <ProductImage src={product.imageUrl} title={product.title} />
+      <ProductImage
+        src={product.imageUrl}
+        title={product.title}
+        productId={product.id}
+      />
       <p className="mt-4 text-xs text-muted capitalize">{product.category}</p>
       <h3 className="mt-2 text-lg font-semibold">{product.title}</h3>
     </Link>

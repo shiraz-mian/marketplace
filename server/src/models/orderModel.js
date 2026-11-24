@@ -99,6 +99,7 @@ const orderSchema = new mongoose.Schema(
     expiresAt: { type: Date, required: true },
     paidAt: { type: Date, default: null },
     refundAttemptedAt: { type: Date, default: null },
+    refundIdempotencyKey: { type: String, default: null },
     refundId: { type: String, default: null },
     refundReason: { type: String, default: "" },
     cartVersion: String,

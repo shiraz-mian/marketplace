@@ -16,7 +16,7 @@ const authenticate = async (req, res, next) => {
   }
 
   const claims = verifyAccessToken(match[1]);
-  req.user = await getAuthenticatedUser(claims.sub);
+  req.user = await getAuthenticatedUser(claims.sub, claims.tokenVersion ?? 0);
   next();
 };
 

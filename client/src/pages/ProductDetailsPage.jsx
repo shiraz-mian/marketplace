@@ -50,7 +50,11 @@ const ProductDetailsPage = () => {
       ) : (
         product && (
           <article className="mt-7 grid gap-8 md:grid-cols-2">
-            <ProductImage src={product.imageUrl} title={product.title} />
+            <ProductImage
+              src={product.imageUrl}
+              title={product.title}
+              productId={product.id}
+            />
             <div>
               <p className="text-sm text-accent capitalize">
                 {product.category}

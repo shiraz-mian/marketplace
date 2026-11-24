@@ -48,29 +48,29 @@ const reconcileRefund = async (order) => {
     );
     return;
   }
-  // Claim before POST. An uncertain provider response is reconciled with GETs;
-  // never repeat a refund blindly after a network timeout.
-  const claimed = await Order.findOneAndUpdate(
-    {
-      _id: order._id,
-      paymentStatus: "refund_pending",
-      refundAttemptedAt: null,
-    },
-    { $set: { refundAttemptedAt: new Date() } },
-    { returnDocument: "after" },
-  );
-  if (!claimed) return;
-  let refund;
-  try {
-    refund = await razorpayGateway.refund(order.paymentId, order);
-  } catch (error) {
-    if (error.providerRejected)
-      await Order.updateOne(
-        { _id: order._id },
-        { $set: { refundAttemptedAt: null } },
-      );
-    throw error;
+  // shortcut: Legacy refunds need manual review; remove after they are resolved.
+  if (order.refundAttemptedAt && !order.refundIdempotencyKey) {
+    console.error("Refund needs manual review:", String(order._id));
+    return;
   }
+  if (!order.refundIdempotencyKey) {
+    order = await Order.findOneAndUpdate(
+      {
+        _id: order._id,
+        paymentStatus: "refund_pending",
+        refundAttemptedAt: null,
+      },
+      {
+        $set: {
+          refundAttemptedAt: new Date(),
+          refundIdempotencyKey: String(order._id),
+        },
+      },
+      { returnDocument: "after" },
+    );
+    if (!order) return;
+  }
+  const refund = await razorpayGateway.refund(order.paymentId, order);
   await Order.updateOne({ _id: order._id }, { $set: { refundId: refund.id } });
 };
 const cleanPaidCart = async (order) => {

@@ -3,6 +3,7 @@ import {
   registerUser,
   loginUser,
   refreshAccessToken,
+  logoutUser,
 } from "../services/authService.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import {
@@ -39,7 +40,8 @@ const refresh = async (req, res) => {
   return sendAuthResponse(res, result, "Access token refreshed successfully.");
 };
 
-const logout = (req, res) => {
+const logout = async (req, res) => {
+  await logoutUser(readRefreshCookie(req));
   clearRefreshCookie(res);
   res.set("Cache-Control", "no-store");
   return res.status(200).json(apiResponse(null, "Signed out successfully."));

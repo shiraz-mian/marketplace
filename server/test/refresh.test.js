@@ -34,8 +34,9 @@ describe(
     );
     const secret = randomBytes(64).toString("base64url");
 
-    const makeCookie = (token = createRefreshToken(user._id.toString())) =>
-      `marketplace_refresh=${token}`;
+    const makeCookie = (
+      token = createRefreshToken(user._id.toString(), user.tokenVersion),
+    ) => `marketplace_refresh=${token}`;
 
     const post = async (path, cookie, headers = {}) => {
       const response = await fetch(`${baseUrl}/api/auth/${path}`, {
@@ -88,6 +89,16 @@ describe(
             : null;
         },
       }));
+      mock.method(User, "updateOne", async (filter) => {
+        if (
+          userExists &&
+          String(filter._id) === String(user._id) &&
+          (filter.tokenVersion === user.tokenVersion ||
+            (filter.$or && user.tokenVersion === 0))
+        ) {
+          user.tokenVersion += 1;
+        }
+      });
       server = app.listen(0, "127.0.0.1");
       await once(server, "listening");
       baseUrl = `http://127.0.0.1:${server.address().port}`;
@@ -95,6 +106,7 @@ describe(
 
     beforeEach(() => {
       user.status = "active";
+      user.tokenVersion = 0;
       userExists = true;
     });
 
@@ -317,7 +329,7 @@ describe(
       }
     });
 
-    test("logout clears the browser cookie but does not revoke saved access or refresh JWTs", async () => {
+    test("logout revokes saved access and refresh JWTs", async () => {
       const access = createAccessToken(user._id.toString());
       const cookie = makeCookie();
       const { response, payload } = await post("logout", cookie);
@@ -328,21 +340,24 @@ describe(
       assert.match(response.headers.get("set-cookie"), /HttpOnly/);
       assert.match(response.headers.get("set-cookie"), /Path=\/api\/auth/);
       assert.equal((await post("refresh")).response.status, 401);
-      assert.equal((await me(access)).response.status, 200);
-      assert.equal((await post("refresh", cookie)).response.status, 200);
+      assert.equal((await me(access)).response.status, 401);
+      assert.equal((await post("refresh", cookie)).response.status, 401);
+      assert.equal((await post("refresh", makeCookie())).response.status, 200);
+      assert.equal((await post("logout", cookie)).response.status, 200);
+      assert.equal(user.tokenVersion, 1);
     });
 
-    test("logout is idempotent and does not require a working database or valid token", async (context) => {
-      context.mock.method(User, "findById", () => {
+    test("logout accepts invalid cookies and reports a database failure for valid tokens", async (context) => {
+      context.mock.method(console, "error", () => {});
+      context.mock.method(User, "updateOne", () => {
         throw new Error("Database unavailable");
       });
-      for (const cookie of [
-        undefined,
-        "marketplace_refresh=invalid",
-        makeCookie(),
-      ]) {
+      for (const cookie of [undefined, "marketplace_refresh=invalid"]) {
         assert.equal((await post("logout", cookie)).response.status, 200);
       }
+      const result = await post("logout", makeCookie());
+      assert.equal(result.response.status, 500);
+      assert.equal(result.response.headers.has("set-cookie"), false);
     });
 
     test("requires the CSRF header and rejects untrusted browser origins", async () => {
